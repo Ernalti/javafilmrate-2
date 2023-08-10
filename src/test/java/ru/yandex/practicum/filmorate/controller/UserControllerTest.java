@@ -224,9 +224,8 @@ public class UserControllerTest {
 
         User updatedUser1 = gson.fromJson(httpMethods.get("/users/" + users[0].getId()).body(), User.class);
         User updatedUser2 = gson.fromJson(httpMethods.get("/users/" + users[1].getId()).body(), User.class);
-        System.out.println(updatedUser2);
 
-//        assertEquals(1, updatedUser1.getFriends().size());
+        assertEquals(1, updatedUser1.getFriends().size());
         assertEquals(1, updatedUser2.getFriends().size());
         assertEquals(users[1].getId(), updatedUser1.getFriends().iterator().next());
         assertEquals(users[0].getId(), updatedUser2.getFriends().iterator().next());
