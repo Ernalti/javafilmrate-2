@@ -87,7 +87,7 @@ class FilmControllerTest {
                 .likes(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film));
-        assertEquals(500,response.statusCode());
+        assertEquals(400,response.statusCode());
         Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
         assertEquals(0,films.length);
     }
