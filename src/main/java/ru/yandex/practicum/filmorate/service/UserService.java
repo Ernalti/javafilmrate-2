@@ -7,6 +7,7 @@ public interface UserService {
     List<User> findAll();
 
     User findUser(Integer id);
+
     List<User> getFriends(Integer id);
 
     List<User> getCommonFriends(Integer id, Integer friendId);
