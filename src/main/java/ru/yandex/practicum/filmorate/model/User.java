@@ -21,7 +21,7 @@ public class User {
     private String email;
     @PastOrPresent
     private LocalDate birthday;
-    @JsonIgnore
+
     private Set<Integer> friends;
 
     public User() {
