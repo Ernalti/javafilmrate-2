@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class FilmServiceImpl implements FilmService{
+public class FilmServiceImpl implements FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
