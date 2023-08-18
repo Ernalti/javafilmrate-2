@@ -1,16 +1,18 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Component
+@Component("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Integer, Film> films = new HashMap<>();
@@ -32,9 +34,41 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> getPopFilms(Integer count) {
+        log.info("Обработка запроса на получение {} наиболее популярных фильмов", count);
+        List<Film> allFilms = getAllFilms();
+        allFilms.sort((film1, film2) -> film2.getLikes().size() - film1.getLikes().size());
+        if (allFilms.size() > count) {
+            return allFilms.subList(0, count);
+        } else {
+            return allFilms;
+        }
+    }
+
+    @Override
+    public Film addLike(Integer id, Integer userId) {
+        log.info("Попытка поставить лайк фильму. Фильм: {}; Пользователь:{}", id, userId);
+        Film film = getFilmById(id);
+//        getUserById(userId);
+        return addLike(film, userId);
+    }
+
+    @Override
+    public Film delLike(Integer id, Integer userId) {
+        log.info("Попытка удалить лайк фильму. Фильм: {}; Пользователь:{}", id, userId);
+        Film film = getFilmById(id);
+//        getUserById(userId);
+        if (!film.getLikes().contains(userId)) {
+            throw new NotFoundException("Лайка от пользователя с id " + userId + " для фильма с id " + id + "не найдено");
+        }
+        return delLike(film, userId);
+    }
+
+
+    @Override
     public Film createFilm(Film film) {
         film.setId(nextId());
-        films.put(film.getId(),film);
+        films.put(film.getId(), film);
         log.info("Фильм успешно загружен в память. Фильм: {}", film);
         return film;
     }

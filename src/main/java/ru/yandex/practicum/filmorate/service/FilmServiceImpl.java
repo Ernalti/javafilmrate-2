@@ -2,12 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class FilmServiceImpl implements FilmService {
     private final UserStorage userStorage;
 
     @Autowired
-    public FilmServiceImpl(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
@@ -34,13 +35,7 @@ public class FilmServiceImpl implements FilmService {
 
     public List<Film> getPopFilms(Integer count) {
         log.info("Обработка запроса на получение {} наиболее популярных фильмов", count);
-        List<Film> allFilms = filmStorage.getAllFilms();
-        allFilms.sort((film1, film2) -> film2.getLikes().size() - film1.getLikes().size());
-        if (allFilms.size() > count) {
-            return allFilms.subList(0, count);
-        } else {
-            return allFilms;
-        }
+        return filmStorage.getPopFilms(count);
     }
 
     public Film create(Film film) {
@@ -72,9 +67,6 @@ public class FilmServiceImpl implements FilmService {
         log.info("Попытка удалить лайк фильму. Фильм: {}; Пользователь:{}", id, userId);
         Film film = filmStorage.getFilmById(id);
         userStorage.getUserById(userId);
-        if (!film.getLikes().contains(userId)) {
-            throw new NotFoundException("Лайка от пользователя с id " + userId + " для фильма с id " + id + "не найдено");
-        }
         return filmStorage.delLike(film,userId);
     }
 
