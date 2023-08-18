@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +27,7 @@ public class User {
     private String email;
     @PastOrPresent
     private LocalDate birthday;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<Integer> friends;
 
     public User() {

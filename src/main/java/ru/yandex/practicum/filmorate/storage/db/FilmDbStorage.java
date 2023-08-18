@@ -32,12 +32,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getAllFilms() {
-        String sql = "SELECT f.film_id, f.name, f.description,f.release, f.duration, f.mpa_id, m.NAME as mpa_name, " +
+        String sql = "SELECT f.film_id, f.name, f.description,f.release, f.duration, f.mpa_id, " +
+                "ARRAY_AGG(l.user_id) AS likes, m.NAME as mpa_name,  " +
                 "ARRAY_AGG(fg.GENRE_ID) AS genres_id, ARRAY_AGG(g.NAME) AS genres_name " +
                 "FROM FILMS AS f " +
                 "LEFT JOIN FILM_GENRE AS fg ON f.film_id=fg.film_id " +
                 "LEFT JOIN GENRE AS g ON g.genre_id=fg.GENRE_ID " +
                 "LEFT JOIN mpa AS m ON f.MPA_ID = m.MPA_ID " +
+                "LEFT JOIN likes AS l ON f.film_id=l.film_id " +
                 "GROUP BY f.FILM_ID";
         log.info("Получение списка фильмов из бд");
         return jdbcTemplate.query(sql, this::mapRowToFilm);
@@ -92,12 +94,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film getFilmById(Integer id) {
-        String sql = "SELECT f.film_id, f.name, f.description,f.release, f.duration, f.mpa_id, m.NAME as mpa_name, " +
+        String sql = "SELECT f.film_id, f.name, f.description,f.release, f.duration, f.mpa_id, " +
+                "ARRAY_AGG(l.user_id) AS likes, m.NAME as mpa_name,  " +
                 "ARRAY_AGG(fg.GENRE_ID) AS genres_id, ARRAY_AGG(g.NAME) AS genres_name " +
                 "FROM FILMS AS f " +
                 "LEFT JOIN FILM_GENRE AS fg ON f.film_id=fg.film_id " +
                 "LEFT JOIN GENRE AS g ON g.genre_id=fg.GENRE_ID " +
                 "LEFT JOIN mpa AS m ON f.MPA_ID = m.MPA_ID " +
+                "LEFT JOIN likes AS l ON f.film_id=l.film_id " +
                 "WHERE f.film_id=?" +
                 "GROUP BY f.FILM_ID";
         log.info("Получение списка фильмов из бд");
@@ -112,7 +116,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getPopFilms(Integer count) {
         log.info("Обработка запроса на получение {} наиболее популярных фильмов из бд", count);
-        String sql = "SELECT f.film_id, f.name, f.description,f.release, f.duration, f.mpa_id, m.NAME as mpa_name,  " +
+        String sql = "SELECT f.film_id, f.name, f.description,f.release, f.duration, f.mpa_id, " +
+                "ARRAY_AGG(l.user_id) AS likes, m.NAME as mpa_name,  " +
                 "    ARRAY_AGG(fg.GENRE_ID) AS genres_id, ARRAY_AGG(g.NAME) AS genres_name, COUNT(l.user_id) " +
                 "FROM FILMS AS f " +
                 "         LEFT JOIN FILM_GENRE AS fg ON f.film_id=fg.film_id " +
@@ -149,8 +154,16 @@ public class FilmDbStorage implements FilmStorage {
 
         Array genreIdsArray = rs.getArray("genres_id");
         Array genresNamesArray = rs.getArray("genres_name");
-        if (genreIdsArray != null && genresNamesArray != null && ((Object[]) genreIdsArray.getArray())[0] != null) {
+        Array likeArray = rs.getArray("likes");
+        Set<Integer> likes = new HashSet<>();
+        if (likeArray != null && ((Object[]) likeArray.getArray())[0] != null) {
             genres = new HashSet<>();
+            Object[] likeArrayObj = (Object[]) likeArray.getArray();
+            likes = new HashSet<>(Arrays.asList(Arrays.copyOf(likeArrayObj, likeArrayObj.length, Integer[].class)));
+
+        }
+        if (genreIdsArray != null && genresNamesArray != null && ((Object[]) genreIdsArray.getArray())[0] != null) {
+
             Object[] genreIdsArrayObj = (Object[]) genreIdsArray.getArray();
             Integer[] genreIds = Arrays.copyOf(genreIdsArrayObj, genreIdsArrayObj.length, Integer[].class);
 
@@ -169,6 +182,7 @@ public class FilmDbStorage implements FilmStorage {
                 .duration(rs.getLong("duration"))
                 .mpa(new Mpa(rs.getInt("mpa_id"), rs.getString("mpa_name")))
                 .genres(genres)
+                .likes(likes)
                 .build();
         return film;
     }

@@ -2,23 +2,37 @@ package ru.yandex.practicum.filmorate.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.GenreService;
+import ru.yandex.practicum.filmorate.service.MpaService;
+
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmControllerTest {
 
     static String serverUrl = "http://localhost:8080";
     private static Gson gson;
     static HttpMethods httpMethods;
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
     @BeforeAll
     public static void beforeAll() {
@@ -37,13 +51,18 @@ class FilmControllerTest {
     @Test
     public void shouldCreateFilm() throws IOException, InterruptedException {
         Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
-        assertEquals(0,films.length);
+        assertEquals(0, films.length);
+        Set<Genre> genres = new HashSet<>();
+        genres.add(genreService.findGenre(1));
+        genres.add(genreService.findGenre(3));
         Film film = Film.builder()
                 .name("L' Arriv?e d'un train ? la Ciotat")
                 .description("L'arriv?e d'un train en gare de La Ciotat est un film de 50 secondes r?alis? en 1896.")
                 .duration(48L)
-                .releaseDate(LocalDate.of(1895,12,28))
+                .releaseDate(LocalDate.of(1895, 12, 28))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film));
         assertEquals(200,response.statusCode());
@@ -59,7 +78,9 @@ class FilmControllerTest {
                 .name("")
                 .description("L'arriv?e d'un train en gare de La Ciotat est un film de 50 secondes r?alis? en 1896.")
                 .duration(48L)
-                .releaseDate(LocalDate.of(1895,12,28))
+                .releaseDate(LocalDate.of(1895, 12, 28))
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .likes(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film));
@@ -83,7 +104,9 @@ class FilmControllerTest {
                 .name("L' Arriv?e d'un train ? la Ciotat")
                 .description("L'arriv?e d'un train en gare de La Ciotat est un film de 50 secondes r?alis? en 1896.")
                 .duration(48L)
-                .releaseDate(LocalDate.of(1895,12,27))
+                .releaseDate(LocalDate.of(1895, 12, 27))
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .likes(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film));
@@ -98,8 +121,10 @@ class FilmControllerTest {
                 .name("Film name")
                 .description("Пятеро друзей ( комик-группа «Шарло»), приезжают в город Бризуль. Здесь они хотят разыскать господина Огюста Куглова, который задолжал им деньги, а именно 20 миллионов. о Куглов, который за время «своего отсутствия», стал кандидатом Коломбани.")
                 .duration(48L)
-                .releaseDate(LocalDate.of(1980,3,25))
+                .releaseDate(LocalDate.of(1980, 3, 25))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film));
         assertEquals(400,response.statusCode());
@@ -113,8 +138,10 @@ class FilmControllerTest {
                 .name("Film name")
                 .description("description")
                 .duration(100L)
-                .releaseDate(LocalDate.of(1995,12,27))
+                .releaseDate(LocalDate.of(1995, 12, 27))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         httpMethods.post("/films", gson.toJson(film));
         Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
@@ -126,8 +153,10 @@ class FilmControllerTest {
                 .name("Update film name")
                 .description("update description")
                 .duration(200L)
-                .releaseDate(LocalDate.of(1994,11,2))
+                .releaseDate(LocalDate.of(1994, 11, 2))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.put("/films", gson.toJson(film));
         assertEquals(200,response.statusCode());
@@ -143,8 +172,10 @@ class FilmControllerTest {
                 .name("Film name")
                 .description("description")
                 .duration(100L)
-                .releaseDate(LocalDate.of(1995,12,27))
+                .releaseDate(LocalDate.of(1995, 12, 27))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         httpMethods.post("/films", gson.toJson(film));
         Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
@@ -156,8 +187,10 @@ class FilmControllerTest {
                 .name("Update film name")
                 .description("update description")
                 .duration(200L)
-                .releaseDate(LocalDate.of(1994,11,2))
+                .releaseDate(LocalDate.of(1994, 11, 2))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.put("/films", gson.toJson(film2));
         assertEquals(404,response.statusCode());
@@ -173,8 +206,10 @@ class FilmControllerTest {
                 .name("Film name")
                 .description("description")
                 .duration(-1L)
-                .releaseDate(LocalDate.of(1995,12,27))
+                .releaseDate(LocalDate.of(1995, 12, 27))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film));
         assertEquals(400,response.statusCode());
@@ -191,6 +226,8 @@ class FilmControllerTest {
                 .duration(100L)
                 .releaseDate(LocalDate.of(2023, 7, 1))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         Film film2 = Film.builder()
                 .name("Film 2")
@@ -198,6 +235,8 @@ class FilmControllerTest {
                 .duration(120L)
                 .releaseDate(LocalDate.of(2023, 7, 15))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         Film film3 = Film.builder()
                 .name("Film 3")
@@ -205,6 +244,8 @@ class FilmControllerTest {
                 .duration(90L)
                 .releaseDate(LocalDate.of(2023, 7, 10))
                 .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
                 .build();
         httpMethods.post("/films", gson.toJson(film1));
         httpMethods.post("/films", gson.toJson(film2));
@@ -223,44 +264,44 @@ class FilmControllerTest {
         assertTrue(popularFilms[0].getLikes().size() >= popularFilms[1].getLikes().size());
     }
 
-//    на гитхабе выдаёт ошибку на 254 строке. Видимо User по какой-то причине не возвращается, а на домашнем всё работает хорошо
-//    FilmControllerTest.shouldAddAndDeleteLike:253 NullPointer
+    @Test
+    public void shouldAddAndDeleteLike() throws IOException, InterruptedException {
+        Film film = Film.builder()
+                .name("Film with Like")
+                .description("Description with Like")
+                .duration(120L)
+                .releaseDate(LocalDate.of(2023, 7, 20))
+                .likes(new HashSet<>())
+                .mpa(mpaService.findMpa(1))
+                .genres(new HashSet<>())
+                .build();
+        httpMethods.post("/films", gson.toJson(film));
 
-//    @Test
-//    public void shouldAddAndDeleteLike() throws IOException, InterruptedException {
-//        Film film = Film.builder()
-//                .name("Film with Like")
-//                .description("Description with Like")
-//                .duration(120L)
-//                .releaseDate(LocalDate.of(2023, 7, 20))
-//                .likes(new HashSet<>())
-//                .build();
-//        httpMethods.post("/films", gson.toJson(film));
-//
-//        Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
-//        assertEquals(1, films.length);
-//
-//        User user = User.builder()
-//                .login("UserLogin")
-//                .name("UserName")
-//                .email("user@mail.ru")
-//                .birthday(LocalDate.of(1895,12,28))
-//                .friends(new HashSet<>())
-//                .build();
-//        httpMethods.post("/users", gson.toJson(user));
-//        int userId = user.getId();
-//        HttpResponse<String> addLikeResponse = httpMethods.put("/films/" + films[0].getId() + "/like/" + userId,
-//                "");
-//        assertEquals(200, addLikeResponse.statusCode());
-//
-//        Film updatedFilm = gson.fromJson(httpMethods.get("/films/" + films[0].getId()).body(), Film.class);
-//        assertTrue(updatedFilm.getLikes().contains(userId));
-//
-//        HttpResponse<String> delLikeResponse = httpMethods.del("/films/" + films[0].getId() + "/like/" + userId);
-//        assertEquals(200, delLikeResponse.statusCode());
-//
-//        Film filmAfterDelLike = gson.fromJson(httpMethods.get("/films/" + films[0].getId()).body(), Film.class);
-//        assertFalse(filmAfterDelLike.getLikes().contains(userId));
-//    }
+        Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
+        assertEquals(1, films.length);
+
+        User user = User.builder()
+                .login("UserLogin")
+                .name("UserName")
+                .email("user@mail.ru")
+                .birthday(LocalDate.of(1895, 12, 28))
+                .friends(new HashSet<>())
+                .build();
+        HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
+        User[] responseUser = gson.fromJson(httpMethods.get("/users").body(), User[].class);
+        int userId = responseUser[0].getId();
+        HttpResponse<String> addLikeResponse = httpMethods.put("/films/" + films[0].getId() + "/like/" + userId
+                , "");
+        assertEquals(200, addLikeResponse.statusCode());
+
+        Film updatedFilm = gson.fromJson(httpMethods.get("/films/" + films[0].getId()).body(), Film.class);
+        assertTrue(updatedFilm.getLikes().contains(userId));
+
+        HttpResponse<String> delLikeResponse = httpMethods.del("/films/" + films[0].getId() + "/like/" + userId);
+        assertEquals(200, delLikeResponse.statusCode());
+
+        Film filmAfterDelLike = gson.fromJson(httpMethods.get("/films/" + films[0].getId()).body(), Film.class);
+        assertFalse(filmAfterDelLike.getLikes().contains(userId));
+    }
 
 }
