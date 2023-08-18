@@ -290,8 +290,8 @@ class FilmControllerTest {
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         User[] responseUser = gson.fromJson(httpMethods.get("/users").body(), User[].class);
         int userId = responseUser[0].getId();
-        HttpResponse<String> addLikeResponse = httpMethods.put("/films/" + films[0].getId() + "/like/" + userId
-                , "");
+        HttpResponse<String> addLikeResponse = httpMethods.put("/films/" + films[0].getId() + "/like/"
+                + userId, "");
         assertEquals(200, addLikeResponse.statusCode());
 
         Film updatedFilm = gson.fromJson(httpMethods.get("/films/" + films[0].getId()).body(), Film.class);
