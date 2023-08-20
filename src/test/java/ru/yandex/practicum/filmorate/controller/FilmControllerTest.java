@@ -322,7 +322,7 @@ class FilmControllerTest {
         httpMethods.put("/films/" + film2.getId() + "/like/" + userId1, "");
         httpMethods.put("/films/" + film2.getId() + "/like/" + userId2, "");
 
-        HttpResponse<String> response = httpMethods.get("/films/popular?count=3" );
+        HttpResponse<String> response = httpMethods.get("/films/popular?count=3");
         assertEquals(200, response.statusCode());
 
         // Преобразуем ответ в список фильмов и проверяем количество
@@ -335,7 +335,7 @@ class FilmControllerTest {
         HttpResponse<String> delLikeResponse = httpMethods.del("/films/" + film2.getId() + "/like/" + userId1);
         assertEquals(200, delLikeResponse.statusCode());
         httpMethods.del("/films/" + film2.getId() + "/like/" + userId2);
-        response = httpMethods.get("/films/popular?count=3" );
+        response = httpMethods.get("/films/popular?count=3");
         popularFilms = gson.fromJson(response.body(), Film[].class);
 
         // Проверяем, что фильмы отсортированы по популярности (по убыванию количества лайков)
