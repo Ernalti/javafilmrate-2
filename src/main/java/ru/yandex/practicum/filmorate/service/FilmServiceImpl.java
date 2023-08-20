@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -61,7 +60,7 @@ public class FilmServiceImpl implements FilmService {
             log.warn("Ошибка обновления фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
         }
-        Film result =filmStorage.updateFilm(film);
+        Film result = filmStorage.updateFilm(film);
         result.setGenres(film.getGenres());
         genreStorage.addGenreToFilm(result);
 //        return filmStorage.getFilmById(result.getId());
