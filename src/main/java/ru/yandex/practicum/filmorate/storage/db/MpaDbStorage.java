@@ -27,7 +27,7 @@ public class MpaDbStorage implements MpaStorage {
         try {
             String sql = "SELECT * FROM mpa WHERE mpa_id=?";
             mpa = jdbcTemplate.query(sql, this::mapRowToMpa, id).get(0);
-        } catch (Exception e) {
+        } catch (IndexOutOfBoundsException e) {
             log.warn("Ошибка получения mpa по id из бд. id: {}", id);
             throw new NotFoundException("Не найден mpa с id = " + id);
         }

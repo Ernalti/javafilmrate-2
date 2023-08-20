@@ -14,10 +14,10 @@ import javax.validation.constraints.NotNull;
 public class Genre {
     @NotNull
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    Integer id;
+    private Integer id;
 
     @NotNull
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String name;
+    private String name;
 
 }

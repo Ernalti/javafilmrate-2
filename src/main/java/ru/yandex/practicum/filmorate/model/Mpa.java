@@ -12,9 +12,9 @@ import javax.validation.constraints.NotNull;
 public class Mpa {
 
     @NotNull
-    Integer id;
+    private Integer id;
 
     @NotNull
-    String name;
+    private String name;
 
 }

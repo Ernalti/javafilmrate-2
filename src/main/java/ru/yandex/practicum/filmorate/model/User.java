@@ -1,45 +1,26 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class User {
     private Integer id;
-    @NotNull
     @NotBlank
+    @Pattern(regexp = "\\S+")
     private String login;
     private String name;
     @NotBlank
     @Email
     private String email;
+    @NotNull
     @PastOrPresent
     private LocalDate birthday;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Set<Integer> friends;
-
-    public User() {
-        this.friends = new HashSet<>(); // Initialize the set in the constructor
-    }
-
-    public void addFriend(Integer id) {
-        this.friends.add(id);
-    }
-
-    public void delFriend(Integer id) {
-        this.friends.remove(id);
-    }
 
 }

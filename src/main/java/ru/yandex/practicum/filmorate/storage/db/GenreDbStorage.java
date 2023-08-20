@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class GenreDbStorage implements GenreStorage {
         try {
             jdbcTemplate.update(sqlDel, film.getId());
             genres = new HashSet<>(jdbcTemplate.query(sql, this::mapRowToGenre, id));
-        } catch (Exception e) {
+        } catch (IndexOutOfBoundsException e) {
             log.warn("Ошибка получения жанра по фильму из бд. id фильма: {}", id);
             throw new NotFoundException("Не найден жанр фильма с id = " + id);
         }
@@ -59,7 +60,9 @@ public class GenreDbStorage implements GenreStorage {
         String sqlDel = "DELETE FROM film_genre WHERE film_id = ?";
         String sql = "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?)";
         jdbcTemplate.update(sqlDel, film.getId());
-        film.getGenres().forEach(g -> jdbcTemplate.update(sql, film.getId(), g.getId()));
+        List<Object[]> batchParams = new ArrayList<>();
+        film.getGenres().forEach(g -> batchParams.add(new Integer[]{film.getId(), g.getId()}));
+        jdbcTemplate.batchUpdate(sql,batchParams);
     }
 
     @Override
@@ -68,7 +71,7 @@ public class GenreDbStorage implements GenreStorage {
         try {
             String sql = "SELECT genre_id, name FROM genre WHERE genre_id=?";
             genre = jdbcTemplate.query(sql, this::mapRowToGenre, id).get(0);
-        } catch (Exception e) {
+        } catch (IndexOutOfBoundsException e) {
             log.warn("Ошибка получения жанра по id: {}", id);
             throw new NotFoundException("Не найден жанр фильма с id = " + id);
         }

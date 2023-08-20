@@ -38,7 +38,7 @@ public class UserDbStorage implements UserStorage {
         try {
             String sql = "SELECT * FROM users WHERE user_id=?";
             user = jdbcTemplate.query(sql, this::mapRowToUser, id).get(0);
-        } catch (Exception e) {
+        } catch (IndexOutOfBoundsException e) {
             log.warn("Ошибка получения пользователя по id из бд. id: {}", id);
             throw new NotFoundException("Не найден пользователь с id = " + id);
         }
@@ -74,7 +74,7 @@ public class UserDbStorage implements UserStorage {
         try {
             getUserById(userId);
             getUserById(friendId);
-        } catch (RuntimeException e) {
+        } catch (NotFoundException e) {
             log.warn("Ошибка добавления друга пользователю в бд Пользователь: {}", user);
             throw new NotFoundException("Не найден пользователь с id = " + user.getId());
         }

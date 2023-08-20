@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.sql.Array;
 import java.sql.ResultSet;
@@ -22,12 +21,10 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final GenreStorage genreStorage;
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, GenreStorage genreStorage) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.genreStorage = genreStorage;
     }
 
     @Override
@@ -52,7 +49,6 @@ public class FilmDbStorage implements FilmStorage {
                 .usingGeneratedKeyColumns("film_id");
         Integer filmId = Math.toIntExact(simpleJdbcInsert.executeAndReturnKey(toMapFilm(film)).longValue());
         film.setId(filmId);
-        genreStorage.addGenreToFilm(film);
         log.info("фильм добавлен в базу. id:{}", filmId);
         return film;
     }
@@ -66,10 +62,8 @@ public class FilmDbStorage implements FilmStorage {
             log.warn("Ошибка обновления пользователя в бд фильм: {}", film);
             throw new NotFoundException("Не найден фильм с id = " + film.getId());
         }
-        genreStorage.addGenreToFilm(film);
         log.info("Обновление фильма в бд прошло успешно. фильм: {}", film);
-        //Пришлось так сделать. потому что в film попадают жанры в обратном порядке
-        return getFilmById(film.getId());
+        return film;
     }
 
     @Override
@@ -150,18 +144,9 @@ public class FilmDbStorage implements FilmStorage {
 
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
-        Set<Genre> genres = new HashSet<>();
-
+        Set<Genre> genres = new LinkedHashSet<>();
         Array genreIdsArray = rs.getArray("genres_id");
         Array genresNamesArray = rs.getArray("genres_name");
-        Array likeArray = rs.getArray("likes");
-        Set<Integer> likes = new HashSet<>();
-        if (likeArray != null && ((Object[]) likeArray.getArray())[0] != null) {
-            genres = new HashSet<>();
-            Object[] likeArrayObj = (Object[]) likeArray.getArray();
-            likes = new HashSet<>(Arrays.asList(Arrays.copyOf(likeArrayObj, likeArrayObj.length, Integer[].class)));
-
-        }
         if (genreIdsArray != null && genresNamesArray != null && ((Object[]) genreIdsArray.getArray())[0] != null) {
 
             Object[] genreIdsArrayObj = (Object[]) genreIdsArray.getArray();
@@ -170,7 +155,7 @@ public class FilmDbStorage implements FilmStorage {
             Object[] genresNamesArrayObj = (Object[]) genresNamesArray.getArray();
             String[] genresNames = Arrays.copyOf(genresNamesArrayObj, genresNamesArrayObj.length, String[].class);
 
-            for (int i = genreIds.length - 1; i >= 0; i--) {
+            for (int i = 0; i < genreIds.length; i++) {
                 genres.add(new Genre(genreIds[i], genresNames[i]));
             }
         }
@@ -181,8 +166,7 @@ public class FilmDbStorage implements FilmStorage {
                 .releaseDate(rs.getDate("release").toLocalDate())
                 .duration(rs.getLong("duration"))
                 .mpa(new Mpa(rs.getInt("mpa_id"), rs.getString("mpa_name")))
-                .genres(genres)
-                .likes(likes)
+                .genres((LinkedHashSet<Genre>) genres)
                 .build();
         return film;
     }

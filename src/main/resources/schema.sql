@@ -25,13 +25,15 @@ CREATE TABLE IF NOT EXISTS films (
 
 CREATE TABLE IF NOT EXISTS friends (
                                        user_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
-                                       friend_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE
+                                       friend_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+                                       PRIMARY KEY (user_id,friend_id)
 );
 
 CREATE TABLE IF NOT EXISTS likes (
 
                                      user_id         INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
-                                     film_id       INTEGER NOT NULL REFERENCES films (film_id) ON DELETE CASCADE
+                                     film_id       INTEGER NOT NULL REFERENCES films (film_id) ON DELETE CASCADE,
+                                     PRIMARY KEY (user_id,film_id)
 );
 
 CREATE TABLE IF NOT EXISTS genre (
@@ -42,7 +44,10 @@ CREATE TABLE IF NOT EXISTS genre (
 
 CREATE TABLE IF NOT EXISTS film_genre (
                                           film_id INTEGER NOT NULL REFERENCES films (film_id) ON DELETE CASCADE,
-                                          genre_id INTEGER    NOT NULL REFERENCES genre(genre_id)
+                                          genre_id INTEGER    NOT NULL REFERENCES genre(genre_id),
+                                          PRIMARY KEY (genre_id,film_id)
 );
 
+create unique index if not exists USER_EMAIL_UINDEX on USERS (email);
+create unique index if not exists USER_LOGIN_UINDEX on USERS (login);
 

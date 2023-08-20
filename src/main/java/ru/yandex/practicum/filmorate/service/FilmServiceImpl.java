@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
@@ -17,11 +18,15 @@ import java.util.List;
 public class FilmServiceImpl implements FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final GenreStorage genreStorage;
 
     @Autowired
-    public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public FilmServiceImpl(FilmStorage filmStorage,
+                           UserStorage userStorage,
+                           GenreStorage genreStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.genreStorage = genreStorage;
     }
 
     public List<Film> findAll() {
@@ -44,7 +49,10 @@ public class FilmServiceImpl implements FilmService {
             log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
         }
-        return filmStorage.createFilm(film);
+        Film result = filmStorage.createFilm(film);
+        result.setGenres(film.getGenres());
+        genreStorage.addGenreToFilm(result);
+        return result;
     }
 
     public Film update(Film film) {
@@ -53,7 +61,11 @@ public class FilmServiceImpl implements FilmService {
             log.warn("Ошибка обновления фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
         }
-        return filmStorage.updateFilm(film);
+        Film result =filmStorage.updateFilm(film);
+        result.setGenres(film.getGenres());
+        genreStorage.addGenreToFilm(result);
+//        return filmStorage.getFilmById(result.getId());
+        return result;
     }
 
     public Film addLike(Integer id, Integer userId) {
