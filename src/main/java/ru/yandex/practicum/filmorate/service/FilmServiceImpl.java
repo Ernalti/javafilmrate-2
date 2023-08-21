@@ -82,9 +82,9 @@ public class FilmServiceImpl implements FilmService {
 
     private void beforeFirstFilm(Film film) {
         LocalDate date = film.getReleaseDate();
-        if (date!=null && date.isBefore(FIRST_FILM_DATE)) {
-            log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше {}. Фильм: {}",FIRST_FILM_DATE, film);
-            throw new ValidationException("Дата релиза фильма не может быть раньше "+FIRST_FILM_DATE);
+        if (date != null && date.isBefore(FIRST_FILM_DATE)) {
+            log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше {}. Фильм: {}", FIRST_FILM_DATE, film);
+            throw new ValidationException("Дата релиза фильма не может быть раньше " + FIRST_FILM_DATE);
         }
     }
 }
