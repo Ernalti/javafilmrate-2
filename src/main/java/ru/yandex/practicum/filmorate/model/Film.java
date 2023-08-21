@@ -28,10 +28,6 @@ public class Film {
     @NotNull
     private Mpa mpa;
 
-//  Понимаю, что так не правильно. пробовал через  @Builder.Default сделать, но всё равно создаётся изначально тип HashSet
     private LinkedHashSet<Genre> genres;
-//    @Builder.Default
-//      private Set<Genre> genres;  = new LinkedHashSet<>();
-
 
 }

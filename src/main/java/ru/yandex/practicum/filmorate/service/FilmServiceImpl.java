@@ -18,6 +18,7 @@ public class FilmServiceImpl implements FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final GenreStorage genreStorage;
+    private static final LocalDate FIRST_FILM_DATE = LocalDate.of(1895, 12, 28);
 
     @Autowired
     public FilmServiceImpl(FilmStorage filmStorage,
@@ -44,10 +45,7 @@ public class FilmServiceImpl implements FilmService {
 
     public Film create(Film film) {
         log.info("Попытка загрузки фильма. Фильм: {}",film);
-        if (beforeFirstFilm(film.getReleaseDate())) {
-            log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
-            throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
-        }
+        beforeFirstFilm(film);
         Film result = filmStorage.createFilm(film);
         result.setGenres(film.getGenres());
         genreStorage.addGenreToFilm(result);
@@ -56,14 +54,10 @@ public class FilmServiceImpl implements FilmService {
 
     public Film update(Film film) {
         log.info("Попытка обновления фильма. Фильм: {}",film);
-        if (beforeFirstFilm(film.getReleaseDate())) {
-            log.warn("Ошибка обновления фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
-            throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
-        }
+        beforeFirstFilm(film);
         Film result = filmStorage.updateFilm(film);
         result.setGenres(film.getGenres());
         genreStorage.addGenreToFilm(result);
-//        return filmStorage.getFilmById(result.getId());
         return result;
     }
 
@@ -86,7 +80,11 @@ public class FilmServiceImpl implements FilmService {
         filmStorage.clearFilms();
     }
 
-    private boolean beforeFirstFilm(LocalDate date) {
-        return date.isBefore(LocalDate.of(1895, 12, 28));
+    private void beforeFirstFilm(Film film) {
+        LocalDate date = film.getReleaseDate();
+        if (date!=null && date.isBefore(FIRST_FILM_DATE)) {
+            log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше {}. Фильм: {}",FIRST_FILM_DATE, film);
+            throw new ValidationException("Дата релиза фильма не может быть раньше "+FIRST_FILM_DATE);
+        }
     }
 }
