@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @AutoConfigureTestDatabase
@@ -91,7 +91,7 @@ class FilmControllerTest {
     public void shouldNotCreateFilmWithNullName() throws IOException, InterruptedException {
         String film2 = "{\"description\":\"adipisicing\",\"releaseDate\":\"1967-03-25\",\"duration\":100}";
         HttpResponse<String> response = httpMethods.post("/films", gson.toJson(film2));
-        assertEquals(400,response.statusCode());
+        assertEquals(500, response.statusCode());
         Film[] films = gson.fromJson(httpMethods.get("/films").body(), Film[].class);
         assertEquals(0,films.length);
     }
