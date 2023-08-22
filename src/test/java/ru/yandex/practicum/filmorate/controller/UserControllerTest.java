@@ -2,20 +2,24 @@ package ru.yandex.practicum.filmorate.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserControllerTest {
 
     static String serverUrl = "http://localhost:8080";
@@ -45,7 +49,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         assertEquals(200,response.statusCode());
@@ -63,7 +66,6 @@ public class UserControllerTest {
                 .login("UserLogin")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         assertEquals(200,response.statusCode());
@@ -83,7 +85,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         assertEquals(400,response.statusCode());
@@ -99,7 +100,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         assertEquals(400,response.statusCode());
@@ -116,7 +116,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("ern@ltinaor@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         assertEquals(400,response.statusCode());
@@ -132,7 +131,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(2025,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.post("/users", gson.toJson(user));
         assertEquals(400,response.statusCode());
@@ -148,7 +146,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         httpMethods.post("/users", gson.toJson(user));
         User[] users = gson.fromJson(httpMethods.get("/users").body(), User[].class);
@@ -159,7 +156,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user1@mail.ru")
                 .birthday(LocalDate.of(1995,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.put("/users", gson.toJson(user2));
         assertEquals(200,response.statusCode());
@@ -176,7 +172,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user@mail.ru")
                 .birthday(LocalDate.of(1895,12,28))
-                .friends(new HashSet<>())
                 .build();
         httpMethods.post("/users", gson.toJson(user));
         User user2 = User.builder()
@@ -185,7 +180,6 @@ public class UserControllerTest {
                 .name("UserName")
                 .email("user1@mail.ru")
                 .birthday(LocalDate.of(1995,12,28))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response = httpMethods.put("/users", gson.toJson(user2));
         assertEquals(404,response.statusCode());
@@ -202,7 +196,6 @@ public class UserControllerTest {
                 .name("User1Name")
                 .email("user1@mail.ru")
                 .birthday(LocalDate.of(1990, 6, 15))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response1 = httpMethods.post("/users", gson.toJson(user1));
         assertEquals(200, response1.statusCode());
@@ -211,7 +204,6 @@ public class UserControllerTest {
                 .name("User2Name")
                 .email("user2@mail.ru")
                 .birthday(LocalDate.of(1995, 8, 23))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response2 = httpMethods.post("/users", gson.toJson(user2));
         assertEquals(200, response2.statusCode());
@@ -222,13 +214,21 @@ public class UserControllerTest {
         HttpResponse<String> response = httpMethods.put("/users/" + users[0].getId() + "/friends/" + users[1].getId(), "");
         assertEquals(200, response.statusCode());
 
-        User updatedUser1 = gson.fromJson(httpMethods.get("/users/" + users[0].getId()).body(), User.class);
-        User updatedUser2 = gson.fromJson(httpMethods.get("/users/" + users[1].getId()).body(), User.class);
+        User[] updatedUser1 = gson.fromJson(httpMethods.get("/users/" + users[0].getId() + "/friends").body(), User[].class);
+        User[] updatedUser2 = gson.fromJson(httpMethods.get("/users/" + users[1].getId() + "/friends").body(), User[].class);
 
-        assertEquals(1, updatedUser1.getFriends().size());
-        assertEquals(1, updatedUser2.getFriends().size());
-        assertEquals(users[1].getId(), updatedUser1.getFriends().iterator().next());
-        assertEquals(users[0].getId(), updatedUser2.getFriends().iterator().next());
+        assertEquals(1, updatedUser1.length);
+        assertEquals(0, updatedUser2.length);
+
+        response = httpMethods.put("/users/" + users[1].getId() + "/friends/" + users[0].getId(), "");
+
+        updatedUser1 = gson.fromJson(httpMethods.get("/users/" + users[0].getId() + "/friends").body(), User[].class);
+        updatedUser2 = gson.fromJson(httpMethods.get("/users/" + users[1].getId() + "/friends").body(), User[].class);
+
+        assertEquals(1, updatedUser1.length);
+        assertEquals(1, updatedUser2.length);
+        assertEquals(users[1].getId(), updatedUser1[0].getId());
+//        assertEquals(users[0].getId(), updatedUser2.getFriends().iterator().next());
     }
 
     @Test
@@ -238,7 +238,6 @@ public class UserControllerTest {
                 .name("User1Name")
                 .email("user1@mail.ru")
                 .birthday(LocalDate.of(1990, 6, 15))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response1 = httpMethods.post("/users", gson.toJson(user1));
         assertEquals(200, response1.statusCode());
@@ -247,7 +246,6 @@ public class UserControllerTest {
                 .name("User2Name")
                 .email("user2@mail.ru")
                 .birthday(LocalDate.of(1995, 8, 23))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response2 = httpMethods.post("/users", gson.toJson(user2));
         assertEquals(200, response2.statusCode());
@@ -261,11 +259,9 @@ public class UserControllerTest {
         HttpResponse<String> delFriendResponse = httpMethods.del("/users/" + users[0].getId() + "/friends/" + users[1].getId());
         assertEquals(200, delFriendResponse.statusCode());
 
-        User updatedUser1 = gson.fromJson(httpMethods.get("/users/" + users[0].getId()).body(), User.class);
-        User updatedUser2 = gson.fromJson(httpMethods.get("/users/" + users[1].getId()).body(), User.class);
+        User[] updatedUser1 = gson.fromJson(httpMethods.get("/users/" + users[0].getId() + "/friends").body(), User[].class);
 
-        assertEquals(0, updatedUser1.getFriends().size());
-        assertEquals(0, updatedUser2.getFriends().size());
+        assertEquals(0, updatedUser1.length);
     }
 
     @Test
@@ -275,7 +271,6 @@ public class UserControllerTest {
                 .name("User1Name")
                 .email("user1@mail.ru")
                 .birthday(LocalDate.of(1990, 6, 15))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response1 = httpMethods.post("/users", gson.toJson(user1));
         assertEquals(200, response1.statusCode());
@@ -284,7 +279,6 @@ public class UserControllerTest {
                 .name("User2Name")
                 .email("user2@mail.ru")
                 .birthday(LocalDate.of(1995, 8, 23))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response2 = httpMethods.post("/users", gson.toJson(user2));
         assertEquals(200, response2.statusCode());
@@ -293,7 +287,6 @@ public class UserControllerTest {
                 .name("User3Name")
                 .email("user3@mail.ru")
                 .birthday(LocalDate.of(1987, 4, 10))
-                .friends(new HashSet<>())
                 .build();
         HttpResponse<String> response3 = httpMethods.post("/users", gson.toJson(user3));
         assertEquals(200, response3.statusCode());

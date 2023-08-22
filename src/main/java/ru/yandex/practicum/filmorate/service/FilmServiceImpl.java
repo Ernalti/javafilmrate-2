@@ -3,11 +3,12 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,11 +17,16 @@ import java.util.List;
 public class FilmServiceImpl implements FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final GenreStorage genreStorage;
+    private static final LocalDate FIRST_FILM_DATE = LocalDate.of(1895, 12, 28);
 
     @Autowired
-    public FilmServiceImpl(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmServiceImpl(FilmStorage filmStorage,
+                           UserStorage userStorage,
+                           GenreStorage genreStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.genreStorage = genreStorage;
     }
 
     public List<Film> findAll() {
@@ -34,31 +40,25 @@ public class FilmServiceImpl implements FilmService {
 
     public List<Film> getPopFilms(Integer count) {
         log.info("Обработка запроса на получение {} наиболее популярных фильмов", count);
-        List<Film> allFilms = filmStorage.getAllFilms();
-        allFilms.sort((film1, film2) -> film2.getLikes().size() - film1.getLikes().size());
-        if (allFilms.size() > count) {
-            return allFilms.subList(0, count);
-        } else {
-            return allFilms;
-        }
+        return filmStorage.getPopFilms(count);
     }
 
     public Film create(Film film) {
         log.info("Попытка загрузки фильма. Фильм: {}",film);
-        if (beforeFirstFilm(film.getReleaseDate())) {
-            log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
-            throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
-        }
-        return filmStorage.createFilm(film);
+        beforeFirstFilm(film);
+        Film result = filmStorage.createFilm(film);
+        result.setGenres(film.getGenres());
+        genreStorage.addGenreToFilm(result);
+        return result;
     }
 
     public Film update(Film film) {
         log.info("Попытка обновления фильма. Фильм: {}",film);
-        if (beforeFirstFilm(film.getReleaseDate())) {
-            log.warn("Ошибка обновления фильма. дата релиза фильма не может быть раньше 28 декабря 1895 года. Фильм: {}",film);
-            throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
-        }
-        return filmStorage.updateFilm(film);
+        beforeFirstFilm(film);
+        Film result = filmStorage.updateFilm(film);
+        result.setGenres(film.getGenres());
+        genreStorage.addGenreToFilm(result);
+        return result;
     }
 
     public Film addLike(Integer id, Integer userId) {
@@ -72,9 +72,6 @@ public class FilmServiceImpl implements FilmService {
         log.info("Попытка удалить лайк фильму. Фильм: {}; Пользователь:{}", id, userId);
         Film film = filmStorage.getFilmById(id);
         userStorage.getUserById(userId);
-        if (!film.getLikes().contains(userId)) {
-            throw new NotFoundException("Лайка от пользователя с id " + userId + " для фильма с id " + id + "не найдено");
-        }
         return filmStorage.delLike(film,userId);
     }
 
@@ -83,7 +80,11 @@ public class FilmServiceImpl implements FilmService {
         filmStorage.clearFilms();
     }
 
-    private boolean beforeFirstFilm(LocalDate date) {
-        return date.isBefore(LocalDate.of(1895, 12, 28));
+    private void beforeFirstFilm(Film film) {
+        LocalDate date = film.getReleaseDate();
+        if (date != null && date.isBefore(FIRST_FILM_DATE)) {
+            log.warn("Ошибка создания фильма. дата релиза фильма не может быть раньше {}. Фильм: {}", FIRST_FILM_DATE, film);
+            throw new ValidationException("Дата релиза фильма не может быть раньше " + FIRST_FILM_DATE);
+        }
     }
 }

@@ -8,6 +8,8 @@ public interface FilmStorage {
 
     List<Film> getAllFilms();
 
+    List<Film> getPopFilms(Integer count);
+
     Film createFilm(Film film);
 
     Film updateFilm(Film film);
