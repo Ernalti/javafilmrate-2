@@ -24,7 +24,7 @@ public class MpaDbStorage {
 	private final JdbcTemplate jdbcTemplate;
 
 	@Test
-	public void ShouldGetMpaById() {
+	public void shouldGetMpaById() {
 		Mpa mpa = Mpa.builder()
 				.id(1)
 				.name("G")
@@ -39,7 +39,7 @@ public class MpaDbStorage {
 	}
 
 	@Test
-	public void ShouldGetAllMpa() {
+	public void shouldGetAllMpa() {
 		String sql = "SELECT * FROM mpa";
 		List<Mpa> allMpa = jdbcTemplate.query(sql, this::mapRowToMpa);
 		assertEquals(allMpa, mpaStorage.getAllMpa());
