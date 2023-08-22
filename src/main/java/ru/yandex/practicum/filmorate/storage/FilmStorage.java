@@ -10,10 +10,6 @@ public interface FilmStorage {
 
     List<Film> getPopFilms(Integer count);
 
-    Film addLike(Integer id, Integer userId);
-
-    Film delLike(Integer id, Integer userId);
-
     Film createFilm(Film film);
 
     Film updateFilm(Film film);

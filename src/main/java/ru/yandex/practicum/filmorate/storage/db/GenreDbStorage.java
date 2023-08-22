@@ -10,10 +10,7 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Component("genreDbStorage")
@@ -23,27 +20,6 @@ public class GenreDbStorage implements GenreStorage {
 
     public GenreDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-    }
-
-    @Override
-    public Set<Genre> getGenreByFilm(Film film) {
-        Integer id = film.getId();
-        Set<Genre> genres;
-        String sqlDel = "DELETE FROM film_genre WHERE film_id=?";
-        String sql = "SELECT g.genre_id, g.name " +
-                "FROM films AS f " +
-                "LEFT JOIN film_genre AS fg ON f.film_id = fg.film_id " +
-                "LEFT JOIN genre AS g ON fg.genre_id = g.genre_id " +
-                "WHERE f.film_id = ? " +
-                "ORDER BY g.genre.id DESC";
-        try {
-            jdbcTemplate.update(sqlDel, film.getId());
-            genres = new HashSet<>(jdbcTemplate.query(sql, this::mapRowToGenre, id));
-        } catch (IndexOutOfBoundsException e) {
-            log.warn("Ошибка получения жанра по фильму из бд. id фильма: {}", id);
-            throw new NotFoundException("Не найден жанр фильма с id = " + id);
-        }
-        return genres;
     }
 
     @Override

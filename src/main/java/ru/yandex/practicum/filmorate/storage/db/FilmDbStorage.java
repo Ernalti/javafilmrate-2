@@ -124,27 +124,10 @@ public class FilmDbStorage implements FilmStorage {
         return result;
     }
 
-    @Override
-    public Film addLike(Integer id, Integer userId) {
-        log.info("Попытка поставить лайк фильму в бд. Фильм: {}; Пользователь:{}", id, userId);
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES(?, ?)";
-        jdbcTemplate.update(sql, id, userId);
-        Film film = getFilmById(id);
-        return film;
-    }
-
-    @Override
-    public Film delLike(Integer id, Integer userId) {
-        log.info("Попытка удалить лайк фильму в бд. Фильм: {}; Пользователь:{}", id, userId);
-        String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
-        jdbcTemplate.update(sql, id, userId);
-        Film film = getFilmById(id);
-        return film;
-    }
 
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
-        Set<Genre> genres = new LinkedHashSet<>();
+        LinkedHashSet<Genre> genres = new LinkedHashSet<>();
         Array genreIdsArray = rs.getArray("genres_id");
         Array genresNamesArray = rs.getArray("genres_name");
         if (genreIdsArray != null && genresNamesArray != null && ((Object[]) genreIdsArray.getArray())[0] != null) {
@@ -166,7 +149,7 @@ public class FilmDbStorage implements FilmStorage {
                 .releaseDate(rs.getDate("release").toLocalDate())
                 .duration(rs.getLong("duration"))
                 .mpa(new Mpa(rs.getInt("mpa_id"), rs.getString("mpa_name")))
-                .genres((LinkedHashSet<Genre>) genres)
+                .genres(genres)
                 .build();
         return film;
     }
